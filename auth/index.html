@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BoardRounds: Account</title>
+<meta name="robots" content="noindex">
+<style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;max-width:480px;margin:0 auto;padding:32px 20px;color:#10243E;line-height:1.5;background:#F3F6FB}h1{font-size:26px}a{color:#1D48A8}nav a{margin-right:14px}.row{position:relative;margin-top:12px}input{width:100%;box-sizing:border-box;font-size:16px;padding:14px 48px 14px 14px;border:2px solid #C9D4E8;border-radius:12px;background:#fff;color:#10243E}button.go{width:100%;margin-top:16px;font-size:16px;font-weight:700;padding:14px;border:0;border-radius:12px;background:#1D48A8;color:#fff}button.go:disabled{opacity:.5}button.eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:0;padding:8px;cursor:pointer}.err{color:#B3261E;font-weight:600;margin-top:12px}.ok{color:#1B7A3E;font-weight:600}.hide{display:none}</style></head>
+<body>
+<nav><a href="/">BoardRounds</a></nav>
+<h1 id="title">BoardRounds</h1>
+<p id="msg">One moment&hellip;</p>
+<form id="form" class="hide" autocomplete="off">
+<div class="row"><input id="p1" type="password" placeholder="New password (8+ characters)" autocomplete="new-password"><button type="button" class="eye" data-for="p1" aria-label="Show or hide password"></button></div>
+<div class="row"><input id="p2" type="password" placeholder="Retype new password" autocomplete="new-password"><button type="button" class="eye" data-for="p2" aria-label="Show or hide password"></button></div>
+<div id="err" class="err"></div>
+<button class="go" id="go" type="submit">Save new password</button>
+</form>
+<p style="margin-top:36px;font-size:14px">&copy; 2026 Lee Bublil. BoardRounds is an independent study aid and is not affiliated with the USMLE program, FSMB or NBME. <a href="/privacy/">Privacy</a> &middot; <a href="/terms/">Terms</a> &middot; <a href="/support/">Support</a></p>
+<script>
+(function () {
+  var URL_ = 'https://kbyxhfuodzotphtbcgdr.supabase.co', KEY = 'sb_publishable_mWzvxV5j6xF4cZrvs6qNUQ_f3cQRKEX';
+  var $ = function (id) { return document.getElementById(id); };
+  var h = new URLSearchParams((location.hash || '').replace(/^#/, '')), q = new URLSearchParams(location.search);
+  var token = h.get('access_token'), type = h.get('type') || q.get('type'), error = h.get('error_code') || q.get('error_code') || h.get('error') || q.get('error');
+  try { history.replaceState(null, '', location.pathname); } catch (e) {}
+  function say(title, text) { $('title').textContent = title; $('msg').textContent = text; }
+  var EYE = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5B6B86" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/><path class="x" d="M4 4l16 16" style="display:none"/></svg>';
+  Array.prototype.forEach.call(document.querySelectorAll('button.eye'), function (b) {
+    b.innerHTML = EYE;
+    b.addEventListener('click', function () { var i = $(b.getAttribute('data-for')), on = i.type === 'password'; i.type = on ? 'text' : 'password'; b.querySelector('.x').style.display = on ? '' : 'none'; });
+  });
+  if (error) {
+    say('This link has expired', 'This link was already used or has expired. Open BoardRounds, tap Log in, then Forgot password, and ask for a new link. Open the newest email only.');
+  } else if (token && type === 'recovery') {
+    say('Choose a new password', 'Enter a new password for your BoardRounds account.');
+    $('form').classList.remove('hide');
+    $('form').addEventListener('submit', function (ev) {
+      ev.preventDefault(); $('err').textContent = '';
+      var a = $('p1').value, b = $('p2').value;
+      if (a.length < 8) { $('err').textContent = 'Use at least 8 characters.'; return; }
+      if (a !== b) { $('err').textContent = 'The two passwords do not match.'; return; }
+      $('go').disabled = true; $('go').textContent = 'Saving\u2026';
+      fetch(URL_ + '/auth/v1/user', { method: 'PUT', headers: { 'Content-Type': 'application/json', apikey: KEY, Authorization: 'Bearer ' + token }, body: JSON.stringify({ password: a }) })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+        .then(function (r) {
+          if (r.ok) { $('form').classList.add('hide'); say('Password changed', 'Open the BoardRounds app and log in with your new password.'); $('msg').className = 'ok'; token = null; return; }
+          var m = (r.j && (r.j.msg || r.j.message || r.j.error_description)) || 'Could not save the password.';
+          $('err').textContent = /different from the old/i.test(m) ? 'Choose a password different from your old one.' : m;
+          $('go').disabled = false; $('go').textContent = 'Save new password';
+        })
+        .catch(function () { $('err').textContent = 'No connection. Check your internet and try again.'; $('go').disabled = false; $('go').textContent = 'Save new password'; });
+    });
+  } else if (token && (type === 'signup' || type === 'email_change' || type === 'magiclink' || type === 'invite')) {
+    say('Email confirmed', 'You can close this page, open the BoardRounds app and log in.'); $('msg').className = 'ok';
+  } else {
+    say('BoardRounds', 'Open the BoardRounds app on your iPhone or iPad to log in. If you came here from an email link that did not work, request a new one from the app.');
+  }
+})();
+</script>
+</body></html>
